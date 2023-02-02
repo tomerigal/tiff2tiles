@@ -1,0 +1,29 @@
+{
+  "name": "tiff2tiles",
+  "author": "",
+  "version": "1.0.0",
+  "description": "CLI tool to convert GeoTIFF to tiles images",
+  "bin": {
+    "tiff2tiles": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "prettier": {},
+  "keywords": [],
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^10.0.0",
+    "geotiff": "^2.0.7",
+    "geotiff-tile": "^0.12.0",
+    "piscina": "^3.2.0",
+    "reproject-bbox": "^0.5.0",
+    "sharp": "^0.31.3"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "@types/sharp": "^0.31.1",
+    "typescript": "^4.9.5"
+  }
+}

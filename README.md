@@ -5,7 +5,7 @@ Convert GeoTIFF to tiles for web map.
 ## Usage
 
 ```bash
-tiff2tiles [options] <input> [output]
+npx tiff2tiles [options] <input> [output]
 ```
 
 ## Options
@@ -24,9 +24,9 @@ tiff2tiles [options] <input> [output]
 ## Examples
 
 ```bash
-tiff2tiles input.tif ./tiles --zoom "0-18" -r near
+npx tiff2tiles input.tif ./tiles --zoom "0-18" -r near
 ```
 
 ```bash
-tiff2tiles -z 0-5 -r near -a 0 -h -V --tilesize 256 --webp-quality 75 --webp-lossless ./input.tif ./output
+npx tiff2tiles ./input.tif ./output --zoom "0-5" --resampling near -nodata 0 --tilesize 256 --webp-quality 75 --webp-lossless
 ```

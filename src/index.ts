@@ -3,7 +3,6 @@ import Piscina from "piscina";
 import { join } from "path";
 import reprojectBBox from "reproject-bbox";
 import { program } from "commander";
-import { once } from "events";
 
 const piscina = new Piscina({
   filename: join(__dirname, "worker.js"),
@@ -73,22 +72,22 @@ const cmd = program
 //   )
 
 const options = cmd.opts<{
-  tilesize?: number;
-  webpQuality?: number;
+  tilesize?: string;
+  webpQuality?: string;
   zoom?: string;
   webpLossless?: boolean;
   resampling?: string;
   help?: boolean;
-  nodata?: number;
+  nodata?: string;
 }>();
 
-const tilesize = options.tilesize || 256;
-const webpQuality = options.webpQuality || 75;
+const tilesize = options.tilesize ? +options.tilesize : 256;
+const webpQuality = options.webpQuality ? +options.webpQuality : 75;
 const zommRange = options.zoom || "0-5";
-const webpLossless = options.webpLossless || false;
+const webpLossless = options.webpLossless ? true : false;
 const resampling = options.resampling || "near";
 const help = options.help || false;
-const nodata = options.nodata || 0;
+const nodata = options.nodata ? +options.nodata : 0;
 const input = cmd.args[0];
 const output = cmd.args[1] || "./output";
 
@@ -102,8 +101,9 @@ const [minZoom, maxZoom] = zommRange.split("-").map((v) => +v) as [
 ];
 
 (async () => {
-  const { fromFile } = await import("geotiff");
-  const geotiff = await fromFile(input as string);
+  const { fromFile, fromUrl } = await import("geotiff");
+  const isURL = input.startsWith("http");
+  const geotiff = await (isURL ? fromUrl(input) : fromFile(input));
   const image = await geotiff.getImage();
   const [minX, minY, maxX, maxY] = image.getBoundingBox() as [
     number,
@@ -116,6 +116,7 @@ const [minZoom, maxZoom] = zommRange.split("-").map((v) => +v) as [
     from: image.geoKeys.ProjectedCSTypeGeoKey,
     to: 4326,
   });
+  const tasks = [];
   for (let zoom = minZoom; zoom <= maxZoom; zoom++) {
     const [xMin, xMax, yMin, yMax] = bboxToXyz(
       bbox[0],
@@ -127,26 +128,31 @@ const [minZoom, maxZoom] = zommRange.split("-").map((v) => +v) as [
     for (let x = xMin; x <= xMax; x++) {
       for (let y = yMin; y <= yMax; y++) {
         const tileBBox = tileEdges(x, y, zoom);
-        piscina.run({
-          x,
-          y,
-          zoom,
-          bbox: tileBBox,
-          tilesize,
-          webpQuality,
-          webpLossless,
-          resampling,
-          nodata,
-          output,
-          input,
-        });
+        tasks.push(
+          piscina.run({
+            x,
+            y,
+            zoom,
+            bbox: tileBBox,
+            tilesize,
+            webpQuality,
+            webpLossless,
+            resampling,
+            nodata,
+            output,
+            input,
+          })
+        );
       }
     }
   }
 
-  await once(piscina, "drain");
-  await once(piscina, "completed");
-  await piscina.destroy();
+  try {
+    await Promise.all(tasks);
+  } catch (err) {
+    console.error(err);
+    await piscina.destroy();
+  }
 })();
 
 export function bboxToXyz(

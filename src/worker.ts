@@ -30,8 +30,9 @@ export default async function createTileWorker({
   resampling: string;
 }) {
   try {
-    const { fromFile } = await import("geotiff");
-    const geotiff = await fromFile(input as string);
+    const { fromFile, fromUrl } = await import("geotiff");
+    const isURL = input.startsWith("http");
+    const geotiff = await (isURL ? fromUrl(input) : fromFile(input));
     const { tile } = (await createTile({
       geotiff: geotiff,
       bbox: bbox,

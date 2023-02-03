@@ -1,7 +1,7 @@
 {
   "name": "tiff2tiles",
   "author": "",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI tool to convert GeoTIFF to tiles images",
   "bin": {
     "tiff2tiles": "dist/index.js"
